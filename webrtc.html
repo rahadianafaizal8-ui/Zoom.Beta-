@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Zoom 50x</title>
+<style>
+:root{--bg:#050607;--ink:#f2f4f5;--dim:#8a9399;--acc:#ffc233;--panel:rgba(14,16,18,.82);--line:rgba(255,255,255,.14);color-scheme:dark;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+html,body{height:100%;margin:0;background:var(--bg);color:var(--ink);font:500 14px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;overflow:hidden}
+#stage{position:absolute;inset:0;overflow:hidden;touch-action:none;background:#000}
+video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transform-origin:50% 50%;will-change:transform;backface-visibility:hidden}
+#grid{position:absolute;inset:0;pointer-events:none;display:none;background:linear-gradient(var(--line),var(--line)) 33.33% 0/1px 100% no-repeat,linear-gradient(var(--line),var(--line)) 66.66% 0/1px 100% no-repeat,linear-gradient(var(--line),var(--line)) 0 33.33%/100% 1px no-repeat,linear-gradient(var(--line),var(--line)) 0 66.66%/100% 1px no-repeat}
+#flashscreen{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none;transition:opacity .15s}
+.top{position:absolute;top:calc(env(safe-area-inset-top,0px) + 10px);left:10px;right:10px;display:flex;justify-content:space-between;align-items:center;gap:8px;z-index:5}
+.chip{background:var(--panel);border:1px solid var(--line);color:var(--ink);border-radius:999px;padding:9px 14px;font:inherit;backdrop-filter:blur(10px);cursor:pointer;min-height:40px}
+.chip.on{background:var(--acc);color:#111;border-color:var(--acc)}
+#readout{font-variant-numeric:tabular-nums;font-weight:700;font-size:15px;min-width:76px;text-align:center}
+.bottom{position:absolute;left:0;right:0;bottom:calc(env(safe-area-inset-bottom,0px) + 12px);padding:0 14px;z-index:5;display:flex;flex-direction:column;gap:12px;align-items:center}
+.presets{display:flex;gap:6px;background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:5px;backdrop-filter:blur(10px)}
+.presets button{background:none;border:0;color:var(--ink);font:inherit;border-radius:999px;min-width:46px;height:36px;cursor:pointer}
+.presets button.on{background:var(--acc);color:#111;font-weight:700}
+.zrow{width:100%;max-width:520px;display:flex;align-items:center;gap:10px;background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:8px 16px;backdrop-filter:blur(10px)}
+.zrow span{color:var(--dim);font-size:12px}
+input[type=range]{-webkit-appearance:none;appearance:none;flex:1;height:28px;background:none;margin:0;touch-action:none}
+input[type=range]::-webkit-slider-runnable-track{height:4px;border-radius:2px;background:var(--line)}
+input[type=range]::-moz-range-track{height:4px;border-radius:2px;background:var(--line)}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:24px;height:24px;border-radius:50%;background:var(--acc);margin-top:-10px;border:0}
+input[type=range]::-moz-range-thumb{width:24px;height:24px;border-radius:50%;background:var(--acc);border:0}
+.shutter{display:flex;align-items:center;justify-content:space-between;width:100%;max-width:520px}
+#shot{width:72px;height:72px;border-radius:50%;border:4px solid #fff;background:rgba(255,255,255,.18);cursor:pointer;position:relative}
+#shot::after{content:"";position:absolute;inset:6px;border-radius:50%;background:#fff;transition:transform .1s}
+#shot:active::after{transform:scale(.85)}
+#thumb{width:48px;height:48px;border-radius:10px;border:1px solid var(--line);background:#111 center/cover;display:block}
+#pro{position:absolute;left:0;right:0;bottom:0;max-height:62%;overflow:auto;z-index:8;background:rgba(10,12,14,.94);border-top:1px solid var(--line);border-radius:18px 18px 0 0;padding:16px 18px calc(env(safe-area-inset-bottom,0px) + 18px);transform:translateY(105%);transition:transform .28s ease;backdrop-filter:blur(14px)}
+#pro.open{transform:none}
+#pro h2{margin:0 0 4px;font-size:16px}
+#pro p{margin:0 0 12px;color:var(--dim);font-size:12.5px}
+.ctl{display:grid;grid-template-columns:104px 1fr 52px;align-items:center;gap:8px;margin:2px 0}
+.ctl b{font-weight:500}.ctl output{text-align:right;color:var(--acc);font-variant-numeric:tabular-nums;font-size:12.5px}
+.ctl.off{opacity:.38}.tag{font-size:11px;color:var(--dim);margin:12px 0 2px}
+.row{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+#msg{position:absolute;inset:0;z-index:9;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;text-align:center;padding:30px;background:var(--bg)}
+#msg h1{margin:0;font-size:34px;letter-spacing:-.02em}#msg p{margin:0;max-width:34ch;color:var(--dim)}
+#start{background:var(--acc);color:#111;border:0;border-radius:999px;padding:14px 28px;font:700 16px inherit;font-family:inherit;cursor:pointer}
+#toast{position:absolute;left:50%;top:calc(env(safe-area-inset-top,0px) + 64px);transform:translateX(-50%);background:var(--panel);border:1px solid var(--line);padding:8px 14px;border-radius:10px;z-index:7;opacity:0;transition:opacity .2s;pointer-events:none;text-align:center;max-width:90%}
+@media (prefers-reduced-motion:reduce){#pro{transition:none}}
+</style>
+</head>
+<body>
+<div id="stage"><video id="v" playsinline muted autoplay></video><div id="grid"></div><div id="flashscreen"></div></div>
+<div class="top">
+  <button class="chip" id="flashBtn">⚡ Flash: Mati</button>
+  <div class="chip" id="readout">1.0×</div>
+  <button class="chip" id="proBtn">Pro</button>
+</div>
+<div id="toast"></div>
+<div class="bottom">
+  <div class="presets" id="presets"></div>
+  <div class="zrow"><span>1×</span><input type="range" id="zs" min="0" max="1000" value="0" aria-label="Zoom"><span>50×</span></div>
+  <div class="shutter">
+    <a id="thumbLink" download="foto-zoom.jpg"><span id="thumb"></span></a>
+    <button id="shot" aria-label="Ambil foto"></button>
+    <button class="chip" id="flip">Balik</button>
+  </div>
+</div>
+<section id="pro" aria-label="Mode Pro">
+  <h2>Mode Pro</h2>
+  <p>Kontrol kamera asli aktif jika perangkat mendukung. Kontrol warna di bawahnya selalu bisa dipakai.</p>
+  <div id="hw"></div>
+  <div class="tag">Penyesuaian gambar</div>
+  <div id="sw"></div>
+  <div class="row">
+    <button class="chip" id="gridBtn">Garis bantu</button>
+    <button class="chip" id="resetBtn">Atur ulang</button>
+    <button class="chip" id="closePro">Tutup</button>
+  </div>
+</section>
+<div id="msg">
+  <h1>Zoom 50×</h1>
+  <p>Kamera dengan zoom halus hingga 50 kali, flash, dan mode pro. Gambar tetap di perangkatmu.</p>
+  <button id="start">Buka kamera</button>
+  <p id="err"></p>
+</div>
+<script>
+(function(){
+var $=function(i){return document.getElementById(i)};
+var v=$('v'),stage=$('stage'),MAX=50;
+var stream=null,track=null,caps={},facing='environment';
+var target=1,cur=1,px=0,py=0,tpx=0,tpy=0,last=0;
+var flashOn=false,hasTorch=false;
+var filt={brightness:100,contrast:100,saturate:100};
+
+function toast(t){var e=$('toast');e.textContent=t;e.style.opacity=1;clearTimeout(toast.h);toast.h=setTimeout(function(){e.style.opacity=0},2200)}
+function clamp(x,a,b){return Math.min(b,Math.max(a,x))}
+
+/* ZOOM: nilai target dikejar secara halus setiap frame (tidak patah-patah) */
+function setZoom(z){target=clamp(z,1,MAX);$('zs').value=Math.round(Math.log(target)/Math.log(MAX)*1000);markPreset()}
+function limits(){var w=stage.clientWidth,h=stage.clientHeight;return{x:(cur-1)*w/2,y:(cur-1)*h/2}}
+function frame(t){
+  var dt=Math.min(.05,(t-last)/1000||.016);last=t;
+  var k=1-Math.exp(-dt*11);
+  cur+=(target-cur)*k;if(Math.abs(target-cur)<.0005)cur=target;
+  var l=limits();
+  tpx=clamp(tpx,-l.x,l.x);tpy=clamp(tpy,-l.y,l.y);
+  px+=(tpx-px)*k;py+=(tpy-py)*k;
+  v.style.transform='translate3d('+px.toFixed(2)+'px,'+py.toFixed(2)+'px,0) scale('+cur.toFixed(4)+')';
+  $('readout').textContent=cur.toFixed(cur<10?1:0).replace(/\.0$/,'.0')+'×';
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+
+[1,2,5,10,25,50].forEach(function(z){
+  var b=document.createElement('button');b.textContent=z+'×';b.dataset.z=z;
+  b.onclick=function(){tpx=tpy=0;setZoom(z)};$('presets').appendChild(b);
+});
+function markPreset(){[].forEach.call($('presets').children,function(b){b.classList.toggle('on',Math.abs(+b.dataset.z-target)<.05)})}
+$('zs').addEventListener('input',function(){setZoom(Math.pow(MAX,this.value/1000))});
+
+/* Gestur: cubit dua jari, roda mouse, geser saat diperbesar */
+var ptrs={},pd=0,pz=1;
+stage.addEventListener('pointerdown',function(e){stage.setPointerCapture(e.pointerId);ptrs[e.pointerId]={x:e.clientX,y:e.clientY};
+  var ks=Object.keys(ptrs);if(ks.length==2){pd=dist();pz=target}});
+stage.addEventListener('pointermove',function(e){
+  var p=ptrs[e.pointerId];if(!p)return;
+  var ks=Object.keys(ptrs);
+  if(ks.length==2){p.x=e.clientX;p.y=e.clientY;var d=dist();if(pd)setZoom(pz*d/pd)}
+  else if(ks.length==1&&target>1){tpx+=e.clientX-p.x;tpy+=e.clientY-p.y;p.x=e.clientX;p.y=e.clientY;
+    px=tpx;py=tpy;}
+  else{p.x=e.clientX;p.y=e.clientY}
+});
+function up(e){delete ptrs[e.pointerId];pd=0}
+stage.addEventListener('pointerup',up);stage.addEventListener('pointercancel',up);
+function dist(){var a=Object.values(ptrs);return Math.hypot(a[0].x-a[1].x,a[0].y-a[1].y)}
+stage.addEventListener('wheel',function(e){e.preventDefault();setZoom(target*Math.exp(-e.deltaY*.002))},{passive:false});
+
+/* KAMERA */
+function start(){
+  $('err').textContent='';
+  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){$('err').textContent='Browser ini tidak mendukung kamera.';return}
+  if(stream)stream.getTracks().forEach(function(t){t.stop()});
+  navigator.mediaDevices.getUserMedia({audio:false,video:{facingMode:{ideal:facing},width:{ideal:3840},height:{ideal:2160}}}).then(function(s){
+    stream=s;track=s.getVideoTracks()[0];v.srcObject=s;v.play();
+    caps=track.getCapabilities?track.getCapabilities():{};
+    hasTorch=!!caps.torch;flashOn=false;updFlash();buildPro();
+    $('msg').style.display='none';
+  }).catch(function(e){
+    $('msg').style.display='flex';
+    $('err').textContent='Kamera tidak bisa dibuka ('+e.name+'). Izinkan akses kamera di pengaturan browser, atau buka halaman ini di tab sendiri.';
+  });
+}
+$('start').onclick=start;
+$('flip').onclick=function(){facing=facing==='environment'?'user':'environment';start()};
+
+/* FLASH: senter asli bila ada, jika tidak layar menyala saat foto */
+function updFlash(){
+  $('flashBtn').textContent='⚡ Flash: '+(flashOn?'Nyala':'Mati');
+  $('flashBtn').classList.toggle('on',flashOn);
+  if(hasTorch)track.applyConstraints({advanced:[{torch:flashOn}]}).catch(function(){});
+}
+$('flashBtn').onclick=function(){
+  flashOn=!flashOn;updFlash();
+  toast(hasTorch?(flashOn?'Senter menyala':'Senter mati'):(flashOn?'Flash layar aktif saat foto':'Flash mati'));
+};
+
+/* FOTO: memotong area yang sedang terlihat sesuai zoom */
+$('shot').onclick=function(){
+  var fs=$('flashscreen');
+  var doScreen=flashOn&&!hasTorch;
+  if(doScreen){fs.style.opacity=1}
+  setTimeout(function(){
+    var vw=v.videoWidth,vh=v.videoHeight;if(!vw)return;
+    var W=stage.clientWidth,H=stage.clientHeight,s=Math.max(W/vw,H/vh);
+    var cw=W/s/cur,ch=H/s/cur;
+    var sx=vw/2-cw/2-px/(s*cur),sy=vh/2-ch/2-py/(s*cur);
+    var c=document.createElement('canvas');c.width=Math.round(cw);c.height=Math.round(ch);
+    var x=c.getContext('2d');
+    x.filter='brightness('+filt.brightness+'%) contrast('+filt.contrast+'%) saturate('+filt.saturate+'%)';
+    if(facing==='user'){x.translate(c.width,0);x.scale(-1,1)}
+    x.drawImage(v,sx,sy,cw,ch,0,0,c.width,c.height);
+    c.toBlob(function(b){
+      var u=URL.createObjectURL(b);$('thumb').style.backgroundImage='url('+u+')';$('thumbLink').href=u;
+      toast('Foto tersimpan. Ketuk pratinjau untuk mengunduh.');
+    },'image/jpeg',.95);
+    fs.style.opacity=0;
+  },doScreen?220:0);
+};
+
+/* MODE PRO */
+function ctl(parent,label,min,max,step,val,fn,enabled,fmt){
+  var d=document.createElement('div');d.className='ctl'+(enabled?'':' off');
+  var l=document.createElement('b');l.textContent=label;
+  var r=document.createElement('input');r.type='range';r.min=min;r.max=max;r.step=step;r.value=val;r.disabled=!enabled;
+  var o=document.createElement('output');
+  function show(){o.textContent=fmt?fmt(+r.value):r.value}show();
+  r.oninput=function(){show();fn(+r.value)};
+  d.appendChild(l);d.appendChild(r);d.appendChild(o);parent.appendChild(d);return r;
+}
+function hwSet(k,val){var o={};o[k]=val;if(k==='focusDistance')o.focusMode='manual';if(k==='exposureTime'||k==='iso')o.exposureMode='manual';if(k==='colorTemperature')o.whiteBalanceMode='manual';
+  track.applyConstraints({advanced:[o]}).catch(function(){toast('Pengaturan ini ditolak perangkat')})}
+function buildPro(){
+  var hw=$('hw'),sw=$('sw');hw.innerHTML='';sw.innerHTML='';
+  var defs=[['exposureCompensation','Eksposur',function(x){return(x>0?'+':'')+x.toFixed(1)}],
+            ['iso','ISO',Math.round],['exposureTime','Rana',function(x){return x>=10000?'1/'+Math.round(1e4/x*1)+'':'1/'+Math.round(1e4/x)}],
+            ['focusDistance','Fokus',function(x){return x.toFixed(2)}],['colorTemperature','Suhu WB',function(x){return Math.round(x)+'K'}]];
+  var any=false;
+  defs.forEach(function(d){
+    var c=caps[d[0]];
+    if(c&&typeof c.min==='number'){any=true;var st=track.getSettings()[d[0]];
+      ctl(hw,d[1],c.min,c.max,c.step||(c.max-c.min)/100,st!=null?st:c.min,function(x){hwSet(d[0],x)},true,d[2]);
+    }else ctl(hw,d[1],0,1,1,0,function(){},false,function(){return 'n/a'});
+  });
+  if(!any){var n=document.createElement('p');n.textContent='Perangkat atau browser ini tidak membuka kontrol kamera manual (umumnya hanya Chrome Android).';hw.insertBefore(n,hw.firstChild)}
+  [['brightness','Kecerahan',50,170],['contrast','Kontras',50,170],['saturate','Saturasi',0,200]].forEach(function(d){
+    ctl(sw,d[1],d[2],d[3],1,filt[d[0]],function(x){filt[d[0]]=x;applyFilt()},true,function(x){return x+'%'});
+  });
+}
+function applyFilt(){v.style.filter='brightness('+filt.brightness+'%) contrast('+filt.contrast+'%) saturate('+filt.saturate+'%)'}
+$('proBtn').onclick=function(){var o=$('pro').classList.toggle('open');this.classList.toggle('on',o)};
+$('closePro').onclick=function(){$('pro').classList.remove('open');$('proBtn').classList.remove('on')};
+$('gridBtn').onclick=function(){var g=$('grid');var on=g.style.display!=='block';g.style.display=on?'block':'none';this.classList.toggle('on',on)};
+$('resetBtn').onclick=function(){filt={brightness:100,contrast:100,saturate:100};applyFilt();if(track)buildPro()};
+buildPro();markPreset();
+})();
+</script>
+</body>
+</html>
