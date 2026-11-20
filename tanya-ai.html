@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Oplus A.I Beta</title>
+<style>
+:root{
+  --bg:#f5f4fb;--surface:#ffffff;--ink:#1b1830;--muted:#6b6785;--line:#e4e1f0;
+  --a1:#6d4aff;--a2:#00b8d9;--me:linear-gradient(135deg,#6d4aff,#4f7bff);--meink:#fff;
+  --code:#14122a;--codeink:#e9e6ff;--err:#c23b3b;--chip:#efecff;
+  color-scheme:light;box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0d0c1a;--surface:#171529;--ink:#ecebf8;--muted:#9a97b8;--line:#2a2745;
+  --a1:#8b72ff;--a2:#37d0ea;--code:#0a0914;--chip:#221f3d;--err:#ff8d8d;color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0d0c1a;--surface:#171529;--ink:#ecebf8;--muted:#9a97b8;--line:#2a2745;
+  --a1:#8b72ff;--a2:#37d0ea;--code:#0a0914;--chip:#221f3d;--err:#ff8d8d;color-scheme:dark}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--ink);font:16px/1.6 "Inter","Segoe UI",system-ui,-apple-system,Roboto,sans-serif}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);background:var(--surface);z-index:10}
+.app{height:100%;max-width:820px;margin:0 auto;display:flex;flex-direction:column;background:var(--bg)}
+header{display:flex;align-items:center;gap:12px;padding:12px 16px;background:var(--surface);border-bottom:1px solid var(--line)}
+.logo{width:38px;height:38px;border-radius:12px;background:linear-gradient(135deg,var(--a1),var(--a2));display:grid;place-items:center;color:#fff;font-size:20px;flex:none}
+.title{flex:1;min-width:0}
+.title b{display:block;font-size:17px}
+.title span{font-size:12.5px;color:var(--muted)}
+.ib{border:1px solid var(--line);background:var(--surface);color:var(--muted);border-radius:10px;width:36px;height:36px;font-size:16px;cursor:pointer;display:grid;place-items:center}
+.ib:hover{color:var(--ink);border-color:var(--a1)}
+.ib[hidden]{display:none}
+.modes{display:flex;gap:8px;padding:10px 16px;overflow-x:auto;background:var(--surface);border-bottom:1px solid var(--line);scrollbar-width:none}
+.modes button{flex:none;border:1px solid transparent;background:var(--chip);color:var(--ink);border-radius:999px;padding:6px 13px;font:inherit;font-size:14px;cursor:pointer}
+.modes button.on{background:linear-gradient(135deg,var(--a1),var(--a2));color:#fff}
+#log{flex:1;overflow-y:auto;padding:18px 16px;display:flex;flex-direction:column;gap:18px;scroll-behavior:smooth}
+.row{display:flex;gap:10px;max-width:100%}
+.row.me{flex-direction:row-reverse}
+.av{width:30px;height:30px;border-radius:10px;flex:none;display:grid;place-items:center;font-size:15px;background:var(--chip)}
+.row.me .av{display:none}
+.col{min-width:0;max-width:86%}
+.bubble{padding:10px 14px;border-radius:18px;overflow-wrap:anywhere}
+.me .bubble{background:var(--me);color:var(--meink);border-bottom-right-radius:5px;white-space:pre-wrap}
+.ai .bubble{background:var(--surface);border:1px solid var(--line);border-top-left-radius:5px}
+.bubble.err{color:var(--err)}
+.bubble p{margin:0 0 .6em}.bubble p:last-child{margin:0}
+.bubble ul,.bubble ol{margin:.2em 0 .6em;padding-left:1.3em}
+.bubble h4{margin:.6em 0 .3em;font-size:1.02em}
+.bubble code{background:var(--chip);padding:1px 6px;border-radius:6px;font:0.88em ui-monospace,Menlo,Consolas,monospace}
+.code{margin:.5em 0;border-radius:12px;overflow:hidden;background:var(--code);color:var(--codeink)}
+.ch{display:flex;justify-content:space-between;align-items:center;padding:6px 12px;font-size:12.5px;background:rgba(255,255,255,.07)}
+.cp{background:none;border:0;color:var(--codeink);cursor:pointer;font:inherit;font-size:12.5px;opacity:.8}
+.cp:hover{opacity:1}
+.code pre{margin:0;padding:12px;overflow-x:auto}
+.code code{background:none;padding:0;color:inherit;font-size:13.5px}
+.acts{display:flex;gap:4px;margin:4px 0 0 4px}
+.acts button{background:none;border:0;color:var(--muted);font:inherit;font-size:13px;cursor:pointer;padding:3px 8px;border-radius:8px}
+.acts button:hover{background:var(--chip);color:var(--ink)}
+.empty{margin:auto;text-align:center;max-width:420px;padding:10px}
+.empty .logo{width:60px;height:60px;font-size:30px;margin:0 auto 14px;border-radius:18px}
+.empty h2{margin:0 0 6px;font-size:23px}
+.empty p{margin:0;color:var(--muted)}
+.sug{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:18px}
+.sug button{text-align:left;background:var(--surface);border:1px solid var(--line);color:var(--ink);border-radius:14px;padding:10px 12px;font:inherit;font-size:14px;cursor:pointer}
+.sug button:hover{border-color:var(--a1)}
+@media(max-width:420px){.sug{grid-template-columns:1fr}}
+.dots span{display:inline-block;animation:b 1.2s infinite}
+.dots span:nth-child(2){animation-delay:.15s}.dots span:nth-child(3){animation-delay:.3s}
+@keyframes b{0%,60%,100%{opacity:.25}30%{opacity:1}}
+@media(prefers-reduced-motion:reduce){.dots span{animation:none}#log{scroll-behavior:auto}}
+.bar{padding:10px 16px 14px;background:var(--bg)}
+form{display:flex;align-items:flex-end;gap:8px;background:var(--surface);border:1px solid var(--line);border-radius:22px;padding:6px 6px 6px 14px}
+form:focus-within{border-color:var(--a1)}
+textarea{flex:1;border:0;background:none;color:var(--ink);resize:none;max-height:140px;padding:8px 0;font:inherit;line-height:1.4;outline:none}
+.mic,.go{border:0;border-radius:16px;width:40px;height:40px;cursor:pointer;font-size:17px;flex:none}
+.mic{background:var(--chip);color:var(--ink)}.mic.rec{background:var(--err);color:#fff}
+.go{background:linear-gradient(135deg,var(--a1),var(--a2));color:#fff;font-weight:700}
+.go:disabled{opacity:.45;cursor:default}
+button:focus-visible,textarea:focus-visible{outline:2px solid var(--a1);outline-offset:2px}
+.note{text-align:center;font-size:12px;color:var(--muted);margin-top:8px}
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div class="logo">✦</div>
+    <div class="title"><b>Oplus A.I Beta</b><span id="sub">Asisten serbaguna</span></div>
+    <button class="ib" id="exp" type="button" title="Simpan percakapan" aria-label="Simpan percakapan">⇩</button>
+    <button class="ib" id="theme" type="button" title="Ganti tema" aria-label="Ganti tema">◐</button>
+    <button class="ib" id="reset" type="button" title="Percakapan baru" aria-label="Percakapan baru">＋</button>
+  </header>
+  <nav class="modes" id="modes" aria-label="Mode"></nav>
+  <main id="log" aria-live="polite"></main>
+  <div class="bar">
+    <form id="form">
+      <textarea id="input" rows="1" placeholder="Tulis pesan…" aria-label="Pesan"></textarea>
+      <button class="mic" id="mic" type="button" title="Bicara" aria-label="Rekam suara" hidden>🎤</button>
+      <button class="go" id="go" type="submit" aria-label="Kirim">↑</button>
+    </form>
+    <div class="note">AI bisa keliru. Periksa kembali info penting.</div>
+  </div>
+</div>
+<script>
+(function(){
+var $=function(i){return document.getElementById(i)};
+var log=$('log'),input=$('input'),go=$('go'),form=$('form'),mic=$('mic'),exp=$('exp');
+var MODES=[
+ {id:'umum',n:'✦ Umum',s:'Asisten serbaguna',p:'Kamu asisten AI ramah dan serbaguna. Jawab jelas, akurat, ringkas.'},
+ {id:'guru',n:'🎓 Guru',s:'Menjelaskan langkah demi langkah',p:'Kamu guru yang sabar. Jelaskan konsep dari dasar dengan analogi dan contoh sederhana, lalu cek pemahaman dengan satu pertanyaan singkat.'},
+ {id:'kode',n:'💻 Koding',s:'Bantu menulis dan memperbaiki kode',p:'Kamu programmer senior. Beri kode yang benar dalam blok kode dengan penjelasan singkat. Sebutkan bug atau risiko yang terlihat.'},
+ {id:'tulis',n:'✍️ Penulis',s:'Menulis dan menyunting teks',p:'Kamu penulis dan editor profesional. Bantu menulis, merapikan, dan memperbaiki gaya tulisan sesuai kebutuhan pengguna.'},
+ {id:'terj',n:'🌐 Penerjemah',s:'Terjemahan dua arah',p:'Kamu penerjemah profesional. Jika teks berbahasa Indonesia, terjemahkan ke Inggris; selain itu terjemahkan ke Indonesia, kecuali pengguna meminta bahasa lain. Beri terjemahan saja, dengan catatan singkat jika ada nuansa penting.'},
+ {id:'santai',n:'😄 Santai',s:'Ngobrol santai',p:'Kamu teman ngobrol yang santai, hangat, dan sedikit jenaka. Pakai bahasa sehari-hari yang sopan.'}
+];
+var SUG=['Jelaskan cara kerja blockchain dengan sederhana','Buatkan rencana belajar 7 hari untuk bahasa Inggris','Tulis fungsi JavaScript untuk menghitung umur','Beri ide bisnis kecil dengan modal di bawah 5 juta'];
+var state={mode:'umum',h:[],theme:''},busy=false,sample=null,ctrl=null,dict=null,dl=null;
+
+function load(){try{var s=JSON.parse(localStorage.getItem('tanyaai')||'null');if(s&&s.h)state=s}catch(e){}}
+function save(){try{localStorage.setItem('tanyaai',JSON.stringify(state))}catch(e){}}
+function mode(){return MODES.filter(function(m){return m.id===state.mode})[0]||MODES[0]}
+function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+function inl(s){s=esc(s);s=s.replace(/`([^`]+)`/g,'<code>$1</code>');s=s.replace(/\*\*([^*]+)\*\*/g,'<strong>$1</strong>');return s.replace(/(^|[^*])\*([^*\n]+)\*/g,'$1<em>$2</em>')}
+function blk(p){var h='',ls=null,pa=[];
+ function fp(){if(pa.length){h+='<p>'+pa.join('<br>')+'</p>';pa=[]}}
+ function fl(){if(ls){h+='</'+ls+'>';ls=null}}
+ p.split('\n').forEach(function(l){var m;
+  if(m=l.match(/^\s*[-*]\s+(.*)/)){fp();if(ls!=='ul'){fl();h+='<ul>';ls='ul'}h+='<li>'+inl(m[1])+'</li>'}
+  else if(m=l.match(/^\s*\d+[.)]\s+(.*)/)){fp();if(ls!=='ol'){fl();h+='<ol>';ls='ol'}h+='<li>'+inl(m[1])+'</li>'}
+  else if(m=l.match(/^#{1,4}\s+(.*)/)){fp();fl();h+='<h4>'+inl(m[1])+'</h4>'}
+  else if(!l.trim()){fp();fl()}else{fl();pa.push(inl(l))}});
+ fp();fl();return h}
+function md(t){var o='';t.split('```').forEach(function(p,i){
+ if(i%2){var n=p.indexOf('\n'),lang=n>-1?p.slice(0,n).trim():'',c=n>-1?p.slice(n+1):p;
+  o+='<div class="code"><div class="ch"><span>'+esc(lang||'kode')+'</span><button class="cp" type="button">Salin</button></div><pre><code>'+esc(c.replace(/\n$/,''))+'</code></pre></div>'}
+ else o+=blk(p)});return o}
+
+function bubbleRow(role,text){
+ var r=document.createElement('div');r.className='row '+role;
+ r.innerHTML='<div class="av">✦</div><div class="col"><div class="bubble"></div></div>';
+ var b=r.querySelector('.bubble');if(role==='me')b.textContent=text;else b.innerHTML=md(text);
+ log.appendChild(r);return r}
+function actions(row,isLast){
+ var a=document.createElement('div');a.className='acts';
+ a.innerHTML='<button type="button" data-a="copy">Salin</button>'+(isLast?'<button type="button" data-a="regen">Ulangi</button>':'');
+ row.querySelector('.col').appendChild(a)}
+function render(){
+ log.innerHTML='';
+ if(!state.h.length){
+  var e=document.createElement('div');e.className='empty';
+  e.innerHTML='<div class="logo">✦</div><h2>Halo, mau tanya apa hari ini?</h2><p>'+esc(mode().s)+'. Ganti mode di atas sesuai kebutuhan.</p><div class="sug"></div>';
+  var g=e.querySelector('.sug');SUG.forEach(function(s){var b=document.createElement('button');b.type='button';b.textContent=s;b.onclick=function(){input.value=s;ask()};g.appendChild(b)});
+  log.appendChild(e)}
+ state.h.forEach(function(m,i){var r=bubbleRow(m.role==='user'?'me':'ai',m.content);
+  if(m.role==='assistant')actions(r,i===state.h.length-1)});
+ log.scrollTop=log.scrollHeight;exp.hidden=!state.h.length&&false}
+function renderModes(){
+ var n=$('modes');n.innerHTML='';
+ MODES.forEach(function(m){var b=document.createElement('button');b.type='button';b.textContent=m.n;if(m.id===state.mode)b.className='on';
+  b.onclick=function(){state.mode=m.id;save();renderModes();if(!state.h.length)render()};n.appendChild(b)});
+ $('sub').textContent=mode().s}
+function setBusy(v){busy=v;go.textContent=v?'■':'↑';go.setAttribute('aria-label',v?'Hentikan':'Kirim');go.disabled=!sample&&!v}
+
+async function run(){
+ var row=bubbleRow('ai','');var b=row.querySelector('.bubble');
+ b.innerHTML='<span class="dots"><span>•</span><span>•</span><span>•</span></span>';log.scrollTop=log.scrollHeight;
+ setBusy(true);ctrl=new AbortController();var part='';
+ var convo=[{role:'user',content:mode().p+' Gunakan bahasa yang sama dengan pengguna (default Bahasa Indonesia). Jika tidak yakin, katakan dengan jujur. Mulai percakapan.'},{role:'assistant',content:'Siap.'}].concat(state.h);
+ try{
+  var r=await sample(convo,{cache:false,signal:ctrl.signal,onText:function(t){part=t.text||'';if(part){b.innerHTML=md(part);log.scrollTop=log.scrollHeight}}});
+  state.h.push({role:'assistant',content:r.text});
+ }catch(err){
+  if(part&&(err&&err.name==='AbortError'||ctrl&&ctrl.signal.aborted)){state.h.push({role:'assistant',content:part})}
+  else{var c=err&&err.code;row.remove();
+   var er=bubbleRow('ai','');var eb=er.querySelector('.bubble');eb.className='bubble err';
+   eb.textContent=c==='not_granted'?'Izin ditolak. Muat ulang halaman dan izinkan akses AI.':c==='rate_limited'?'Terlalu banyak permintaan. Tunggu sebentar, lalu coba lagi.':'Gagal mendapat jawaban. Tekan Ulangi atau kirim lagi.';
+   if(!(ctrl&&ctrl.signal.aborted)){setBusy(false);ctrl=null;save();return}}
+ }
+ setBusy(false);ctrl=null;save();render();input.focus()}
+
+function ask(){
+ var q=input.value.trim();if(!q||busy||!sample)return;
+ input.value='';input.style.height='auto';state.h.push({role:'user',content:q});save();render();run()}
+function regen(){if(busy)return;if(state.h.length&&state.h[state.h.length-1].role==='assistant')state.h.pop();
+ if(!state.h.length)return;save();render();run()}
+function copy(t,btn){
+ function ok(){var o=btn.textContent;btn.textContent='Tersalin';setTimeout(function(){btn.textContent=o},1200)}
+ try{navigator.clipboard.writeText(t).then(ok,fb)}catch(e){fb()}
+ function fb(){var x=document.createElement('textarea');x.value=t;document.body.appendChild(x);x.select();try{document.execCommand('copy');ok()}catch(e){}x.remove()}}
+
+form.addEventListener('submit',function(e){e.preventDefault();if(busy){if(ctrl)ctrl.abort()}else ask()});
+input.addEventListener('keydown',function(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();if(!busy)ask()}});
+input.addEventListener('input',function(){input.style.height='auto';input.style.height=Math.min(input.scrollHeight,140)+'px'});
+log.addEventListener('click',function(e){
+ var t=e.target;
+ if(t.classList.contains('cp')){copy(t.closest('.code').querySelector('code').textContent,t)}
+ else if(t.dataset&&t.dataset.a==='copy'){var i=Array.prototype.indexOf.call(log.querySelectorAll('.row'),t.closest('.row'));copy(state.h[i].content,t)}
+ else if(t.dataset&&t.dataset.a==='regen')regen()});
+$('reset').onclick=function(){if(ctrl)ctrl.abort();state.h=[];save();render();setBusy(false)};
+$('theme').onclick=function(){var d=document.documentElement,dark=d.getAttribute('data-theme')?d.getAttribute('data-theme')==='dark':matchMedia('(prefers-color-scheme: dark)').matches;
+ state.theme=dark?'light':'dark';d.setAttribute('data-theme',state.theme);save()};
+exp.onclick=async function(){
+ if(!state.h.length)return;
+ var txt=state.h.map(function(m){return (m.role==='user'?'Saya':'AI')+':\n'+m.content}).join('\n\n');
+ if(dl){try{await dl.save({filename:'percakapan-oplus-ai.txt',data:txt})}catch(e){}}
+ else copy(txt,exp)};
+mic.onclick=function(){if(!dict)return;if(mic.classList.contains('rec')){dict.stop();return}dict.start().catch(function(){})};
+
+load();if(state.theme)document.documentElement.setAttribute('data-theme',state.theme);
+renderModes();render();setBusy(false);go.disabled=true;
+(async function(){
+ try{sample=await claude.use('sample')}catch(e){sample=null}
+ if(!sample){var er=bubbleRow('ai','');er.querySelector('.bubble').className='bubble err';er.querySelector('.bubble').textContent='Fitur AI belum tersedia di tampilan ini. Buka halaman lewat claude.ai dan beri izin saat diminta.'}
+ else go.disabled=false;
+ try{dl=await claude.use('downloads')}catch(e){dl=null}
+ try{dict=await claude.use('dictation')}catch(e){dict=null}
+ if(dict){mic.hidden=false;
+  dict.onFinal(function(r){input.value=(input.value+' '+r.text).trim();input.dispatchEvent(new Event('input'))});
+  dict.onState(function(s){mic.classList.toggle('rec',s.state==='listening')})}
+})();
+})();
+</script>
+</body>
+</html>
