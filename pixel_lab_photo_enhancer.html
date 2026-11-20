@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>PIXEL LAB — Photo Enhancer</title>
+<style>
+:root{--bg:#101014;--panel:#1b1b23;--panel2:#252530;--line:#454553;--ink:#f5f3ff;--muted:#aaa8bb;--accent:#b99aff;--mint:#9df2d0;--pink:#ff9ecb}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:ui-monospace,SFMono-Regular,Consolas,monospace;image-rendering:pixelated}
+button,input,select{font:inherit}button{cursor:pointer;color:inherit}
+.app{max-width:760px;margin:auto;min-height:100vh;padding:18px 16px 36px;background:linear-gradient(180deg,#17171e,#101014)}
+.top{display:flex;align-items:center;justify-content:space-between;margin-bottom:22px}.brand{font-weight:900;letter-spacing:2px;font-size:15px}.brand span{color:var(--accent)}.tag{font-size:10px;color:var(--mint);border:1px solid #477a68;padding:5px 8px}
+h1{font-size:clamp(21px,5vw,30px);margin:8px 0 7px;line-height:1.25}.sub{color:var(--muted);font-size:12px;line-height:1.6;margin:0 0 20px}
+.tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:18px 0 16px}.tab{background:var(--panel);border:2px solid var(--line);padding:10px 4px;font-size:10px;min-height:58px;line-height:1.4}.tab.active{border-color:var(--accent);background:#292238;color:#e8dcff}.tab b{display:block;font-size:17px;margin-bottom:3px}
+.panel{border:2px solid var(--line);background:var(--panel);padding:14px;margin-bottom:13px;box-shadow:4px 4px 0 #08080b}
+.section-title{font-size:12px;color:var(--mint);letter-spacing:1px;margin:0 0 12px}
+.preview{position:relative;min-height:210px;background:#0b0b10;border:2px dashed #555568;display:flex;align-items:center;justify-content:center;overflow:hidden;margin-bottom:12px}
+.preview img,.preview canvas{display:block;max-width:100%;max-height:440px;object-fit:contain}
+.placeholder{text-align:center;color:var(--muted);font-size:12px;padding:32px;line-height:1.8}.pixel-icon{font-size:35px;display:block;color:var(--accent);margin-bottom:8px}
+.row{display:flex;gap:8px;flex-wrap:wrap}.row>*{flex:1}
+.btn{border:2px solid var(--line);background:var(--panel2);padding:12px 10px;font-weight:800;font-size:12px;min-height:44px}.btn.primary{background:var(--accent);border-color:#e3d5ff;color:#191321}.btn.good{background:var(--mint);border-color:#d1ffec;color:#10251d}.btn:disabled{opacity:.4;cursor:not-allowed}
+.file-label{display:flex;align-items:center;justify-content:center;text-align:center}
+input[type=file]{display:none}
+.options{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin:12px 0}.option{border:2px solid var(--line);background:#20202a;padding:11px 5px;text-align:center;font-size:11px}.option.active{border-color:var(--accent);background:#302744}.option strong{display:block;font-size:15px;margin-bottom:5px}
+.sliderline{margin:13px 0}.sliderline label{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-bottom:6px}input[type=range]{width:100%;accent-color:var(--accent)}
+.note{font-size:10px;color:var(--muted);line-height:1.6;margin:10px 0}.status{font-size:11px;color:var(--mint);min-height:18px;margin:8px 0}
+.compare{display:flex;gap:8px;align-items:center;justify-content:center;font-size:10px;color:var(--muted);margin:8px 0}
+.camera{width:100%;background:#050507;max-height:420px;object-fit:contain}
+.hidden{display:none!important}.result-actions{margin-top:10px}.resolution-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}
+.footer{text-align:center;color:#696879;font-size:9px;letter-spacing:1px;margin-top:25px}
+@media(min-width:600px){.app{padding:25px 26px}.tab{font-size:12px}.panel{padding:18px}.preview{min-height:300px}}
+</style>
+</head>
+<body>
+<main class="app">
+  <header class="top"><div class="brand">▣ PIXEL<span>LAB</span></div><div class="tag">PHOTO TOOLKIT v1.0</div></header>
+  <h1>Studio Foto Pixel</h1>
+  <p class="sub">Tingkatkan kualitas, perbaiki foto, atur resolusi, atau ambil foto langsung dari kamera.</p>
+
+  <nav class="tabs" aria-label="Menu">
+    <button class="tab active" data-tab="enhance"><b>✦</b>Peningkatan</button>
+    <button class="tab" data-tab="repair"><b>◈</b>Repair Pro</button>
+    <button class="tab" data-tab="resolution"><b>▧</b>Resolusi</button>
+    <button class="tab" data-tab="live"><b>▣</b>Foto Live</button>
+  </nav>
+
+  <section id="enhance" class="screen">
+    <div class="panel">
+      <p class="section-title">01 / PENINGKAT KUALITAS</p>
+      <div class="preview" id="enhancePreview"><div class="placeholder"><span class="pixel-icon">▧</span>Pilih foto untuk mulai meningkatkan kualitas.</div></div>
+      <div class="row">
+        <label class="btn file-label">＋ Pilih Foto<input id="enhanceFile" type="file" accept="image/*"></label>
+        <button class="btn" id="resetEnhance">Reset</button>
+      </div>
+      <div class="options" id="enhanceOptions">
+        <button class="option active" data-scale="1"><strong>HD</strong>Ringan</button>
+        <button class="option" data-scale="1.5"><strong>Ultra HD+</strong>Lebih besar</button>
+        <button class="option" data-scale="2"><strong>2×</strong>Resolusi ganda</button>
+      </div>
+      <div class="sliderline"><label><span>Ketajaman</span><span id="sharpVal">18%</span></label><input id="sharp" type="range" min="0" max="45" value="18"></div>
+      <div class="sliderline"><label><span>Pengurangan noise</span><span id="noiseVal">8%</span></label><input id="noise" type="range" min="0" max="25" value="8"></div>
+      <button class="btn primary" id="enhanceBtn" style="width:100%">✦ TINGKATKAN GAMBAR</button>
+      <div class="status" id="enhanceStatus"></div>
+      <div class="row result-actions hidden" id="enhanceActions">
+        <button class="btn good" id="saveEnhance">↓ Simpan Foto HD</button>
+        <button class="btn" id="compareEnhance">Lihat Asli</button>
+      </div>
+      <p class="note">Ultra HD+ benar-benar memperbesar ukuran piksel file hasil. Proses ini memakai pemrosesan gambar di perangkat; detail yang hilang dari foto sangat blur tidak bisa dipulihkan sepenuhnya. Pengaturan dibuat lembut agar tidak over-sharpen atau over-noise.</p>
+    </div>
+  </section>
+
+  <section id="repair" class="screen hidden">
+    <div class="panel">
+      <p class="section-title">02 / REPAIR — PRO</p>
+      <div class="preview" id="repairPreview"><div class="placeholder"><span class="pixel-icon">◈</span>Pilih foto yang ingin diperbaiki.</div></div>
+      <div class="row">
+        <label class="btn file-label">＋ Pilih Foto<input id="repairFile" type="file" accept="image/*"></label>
+        <button class="btn" id="repairReset">Reset</button>
+      </div>
+      <div class="options" id="repairMode">
+        <button class="option active" data-mode="basic"><strong>◇</strong>Dasar</button>
+        <button class="option" data-mode="pro"><strong>✧</strong>Pro</button>
+        <button class="option" data-mode="portrait"><strong>☺</strong>Potret</button>
+      </div>
+      <button class="btn primary" id="repairBtn" style="width:100%">✦ PERBAIKI FOTO</button>
+      <div class="status" id="repairStatus"></div>
+      <button class="btn good hidden" id="saveRepair" style="width:100%">↓ Simpan Hasil Repair</button>
+      <p class="note">Mode Pro menerapkan koreksi kontras, warna, dan ketajaman sedang. Mode Potret memakai sentuhan lebih halus.</p>
+    </div>
+  </section>
+
+  <section id="resolution" class="screen hidden">
+    <div class="panel">
+      <p class="section-title">03 / RESOLUSI SUPER</p>
+      <div class="preview" id="resolutionPreview"><div class="placeholder"><span class="pixel-icon">▧</span>Pilih foto, lalu tentukan resolusi hasil.</div></div>
+      <label class="btn file-label" style="width:100%">＋ Pilih Foto<input id="resolutionFile" type="file" accept="image/*"></label>
+      <div class="options" id="resolutionOptions">
+        <button class="option active" data-scale="1"><strong>Asli</strong>Ukuran awal</button>
+        <button class="option" data-scale="1.5"><strong>1080P*</strong>HD</button>
+        <button class="option" data-scale="2"><strong>2K*</strong>Ultra HD</button>
+      </div>
+      <button class="btn primary" id="resolutionBtn" style="width:100%">BUAT RESOLUSI SUPER</button>
+      <div class="status" id="resolutionStatus"></div>
+      <button class="btn good hidden" id="saveResolution" style="width:100%">↓ Simpan Foto</button>
+      <p class="note">*Pilihan 1080P/2K adalah skala pembesaran dari foto sumber dengan batas ukuran aman. Hasil aktual bergantung pada ukuran foto awal.</p>
+    </div>
+  </section>
+
+  <section id="live" class="screen hidden">
+    <div class="panel">
+      <p class="section-title">04 / FOTO LIVE</p>
+      <div class="preview" id="livePreview"><div class="placeholder"><span class="pixel-icon">▣</span>Aktifkan kamera untuk mengambil foto.</div></div>
+      <video id="video" class="camera hidden" autoplay playsinline></video>
+      <canvas id="liveCanvas" class="hidden" style="max-width:100%"></canvas>
+      <div class="row">
+        <button class="btn primary" id="startCamera">▶ Buka Kamera</button>
+        <button class="btn" id="switchCamera" disabled>↻ Balik Kamera</button>
+      </div>
+      <button class="btn good" id="capture" disabled style="width:100%;margin-top:8px">● AMBIL FOTO</button>
+      <div class="row result-actions hidden" id="liveActions">
+        <button class="btn good" id="saveLive">↓ SIMPAN FOTO</button>
+        <button class="btn" id="retake">Ambil Ulang</button>
+      </div>
+      <div class="status" id="liveStatus"></div>
+      <p class="note">Izinkan akses kamera saat diminta. Kamera biasanya hanya dapat digunakan melalui HTTPS atau localhost. Foto yang diambil bisa langsung disimpan ke perangkat.</p>
+    </div>
+  </section>
+  <div class="footer">PIXELLAB • LOCAL PROCESSING • YOUR PHOTOS STAY ON DEVICE</div>
+</main>
+<script>
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const data={enhance:null,repair:null,resolution:null};
+const results={enhance:null,repair:null,resolution:null,live:null};
+function loadImage(file,cb){if(!file)return;const url=URL.createObjectURL(file),img=new Image();img.onload=()=>{cb(img);URL.revokeObjectURL(url)};img.onerror=()=>alert('Foto tidak bisa dibuka. Coba file gambar lain.');img.src=url}
+function showPreview(id,img){const box=$(id);box.innerHTML='';const c=document.createElement('canvas');c.width=img.naturalWidth;c.height=img.naturalHeight;const ctx=c.getContext('2d');ctx.drawImage(img,0,0);c.style.maxHeight='440px';box.appendChild(c);return c}
+function canvasFromImage(img,w=img.naturalWidth,h=img.naturalHeight){const c=document.createElement('canvas');c.width=w;c.height=h;const x=c.getContext('2d',{willReadFrequently:true});x.imageSmoothingEnabled=true;x.imageSmoothingQuality='high';x.drawImage(img,0,0,w,h);return c}
+function sharpenAndDenoise(canvas,sharp=18,noise=8,contrast=1,sat=1,bright=1){
+ const ctx=canvas.getContext('2d',{willReadFrequently:true}),w=canvas.width,h=canvas.height;
+ let im=ctx.getImageData(0,0,w,h),d=im.data;
+ // gentle local smoothing: blends a small amount with neighboring pixels to suppress speckle
+ if(noise>0){const src=new Uint8ClampedArray(d),amt=noise/100*.22;for(let y=1;y<h-1;y+=1){for(let x=1;x<w-1;x+=1){let i=(y*w+x)*4;for(let k=0;k<3;k++){let avg=(src[i-4+k]+src[i+4+k]+src[i-w*4+k]+src[i+w*4+k])/4;d[i+k]=src[i+k]*(1-amt)+avg*amt}}}}
+ // mild brightness / contrast / saturation
+ const con=contrast, s=sat;
+ for(let i=0;i<d.length;i+=4){let r=d[i],g=d[i+1],b=d[i+2];let gray=.299*r+.587*g+.114*b;r=gray+(r-gray)*s;g=gray+(g-gray)*s;b=gray+(b-gray)*s;d[i]=((r-128)*con+128)*bright;d[i+1]=((g-128)*con+128)*bright;d[i+2]=((b-128)*con+128)*bright;}
+ ctx.putImageData(im,0,0);
+ if(sharp>0){const src=ctx.getImageData(0,0,w,h),out=ctx.createImageData(w,h),a=src.data,o=out.data,amt=sharp/100*.48;for(let y=1;y<h-1;y++){for(let x=1;x<w-1;x++){let i=(y*w+x)*4;for(let k=0;k<3;k++){let blur=(a[i-4+k]+a[i+4+k]+a[i-w*4+k]+a[i+w*4+k])/4;o[i+k]=a[i+k]+(a[i+k]-blur)*amt;}o[i+3]=a[i+3]}}ctx.putImageData(out,0,0)}
+ return canvas;
+}
+function downloadCanvas(c,name){c.toBlob(blob=>{if(!blob){alert('Gagal membuat foto.');return}const a=document.createElement('a'),u=URL.createObjectURL(blob);a.href=u;a.download=name+'.jpg';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),1500)},'image/jpeg',.94)}
+function bindFile(input,key,preview){$(input).addEventListener('change',e=>loadImage(e.target.files[0],img=>{data[key]=img;showPreview(preview,img);results[key]=null;const btn=$('#save'+key[0].toUpperCase()+key.slice(1));if(btn)btn.classList.add('hidden');$(`#${key}Status`).textContent='Foto siap diproses.'}))}
+bindFile('#enhanceFile','enhance','#enhancePreview');bindFile('#repairFile','repair','#repairPreview');bindFile('#resolutionFile','resolution','#resolutionPreview');
+$$('.tab').forEach(b=>b.onclick=()=>{$$('.tab').forEach(x=>x.classList.toggle('active',x===b));$$('.screen').forEach(s=>s.classList.toggle('hidden',s.id!==b.dataset.tab))});
+$('#sharp').oninput=e=>$('#sharpVal').textContent=e.target.value+'%';$('#noise').oninput=e=>$('#noiseVal').textContent=e.target.value+'%';
+let enhanceScale=1,repairMode='basic',resolutionScale=1;
+$$('#enhanceOptions .option').forEach(b=>b.onclick=()=>{ $$('#enhanceOptions .option').forEach(x=>x.classList.toggle('active',x===b));enhanceScale=+b.dataset.scale});
+$$('#repairMode .option').forEach(b=>b.onclick=()=>{ $$('#repairMode .option').forEach(x=>x.classList.toggle('active',x===b));repairMode=b.dataset.mode});
+$$('#resolutionOptions .option').forEach(b=>b.onclick=()=>{ $$('#resolutionOptions .option').forEach(x=>x.classList.toggle('active',x===b));resolutionScale=+b.dataset.scale});
+function safeSize(img,scale){let w=Math.round(img.naturalWidth*scale),h=Math.round(img.naturalHeight*scale),max=4096;if(Math.max(w,h)>max){let f=max/Math.max(w,h);w=Math.round(w*f);h=Math.round(h*f)}return [Math.max(1,w),Math.max(1,h)]}
+$('#enhanceBtn').onclick=()=>{const img=data.enhance;if(!img)return $('#enhanceStatus').textContent='Pilih foto terlebih dahulu.';$('#enhanceStatus').textContent='Memproses gambar…';setTimeout(()=>{let [w,h]=safeSize(img,enhanceScale),c=canvasFromImage(img,w,h);sharpenAndDenoise(c,+$('#sharp').value,+$('#noise').value,1.035,1.025,1.01);results.enhance=c;$('#enhancePreview').innerHTML='';$('#enhancePreview').appendChild(c);c.style.maxWidth='100%';c.style.maxHeight='440px';$('#enhanceStatus').textContent=`Selesai: ${w} × ${h} piksel`;$('#enhanceActions').classList.remove('hidden')},30)};
+$('#saveEnhance').onclick=()=>results.enhance&&downloadCanvas(results.enhance,'pixel-lab-hd');
+$('#compareEnhance').onclick=()=>{if(!data.enhance)return;const c=showPreview('#enhancePreview',data.enhance);$('#enhanceStatus').textContent='Menampilkan foto asli. Tekan Tingkatkan Gambar untuk memproses ulang.'};
+$('#resetEnhance').onclick=()=>{data.enhance=null;results.enhance=null;$('#enhanceFile').value='';$('#enhancePreview').innerHTML='<div class="placeholder">Pilih foto untuk mulai meningkatkan kualitas.</div>';$('#enhanceActions').classList.add('hidden');$('#enhanceStatus').textContent=''};
+$('#repairBtn').onclick=()=>{const img=data.repair;if(!img)return $('#repairStatus').textContent='Pilih foto terlebih dahulu.';let [w,h]=safeSize(img,repairMode==='pro'?1.5:1);let c=canvasFromImage(img,w,h);let p=repairMode==='pro'?[25,10,1.09,1.08,1.025]:repairMode==='portrait'?[12,5,1.025,.98,1.02]:[16,8,1.05,1.04,1.01];sharpenAndDenoise(c,...p);results.repair=c;$('#repairPreview').innerHTML='';$('#repairPreview').appendChild(c);c.style.maxWidth='100%';c.style.maxHeight='440px';$('#repairStatus').textContent=`Repair selesai • ${w} × ${h} px` ;$('#saveRepair').classList.remove('hidden')};
+$('#saveRepair').onclick=()=>results.repair&&downloadCanvas(results.repair,'pixel-lab-repair');
+$('#repairReset').onclick=()=>{data.repair=null;results.repair=null;$('#repairFile').value='';$('#repairPreview').innerHTML='<div class="placeholder">Pilih foto yang ingin diperbaiki.</div>';$('#saveRepair').classList.add('hidden');$('#repairStatus').textContent=''};
+$('#resolutionBtn').onclick=()=>{const img=data.resolution;if(!img)return $('#resolutionStatus').textContent='Pilih foto terlebih dahulu.';let [w,h]=safeSize(img,resolutionScale),c=canvasFromImage(img,w,h);if(resolutionScale>1)sharpenAndDenoise(c,10,4,1.015,1.01,1);results.resolution=c;$('#resolutionPreview').innerHTML='';$('#resolutionPreview').appendChild(c);c.style.maxWidth='100%';c.style.maxHeight='440px';$('#resolutionStatus').textContent=`Berhasil dibuat • ${w} × ${h} px` ;$('#saveResolution').classList.remove('hidden')};
+$('#saveResolution').onclick=()=>results.resolution&&downloadCanvas(results.resolution,'pixel-lab-resolution');
+let stream=null,facing='environment';
+const video=$('#video'),liveCanvas=$('#liveCanvas');
+async function stopCam(){if(stream){stream.getTracks().forEach(t=>t.stop());stream=null}video.srcObject=null}
+$('#startCamera').onclick=async()=>{try{await stopCam();stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:facing},audio:false});video.srcObject=stream;video.classList.remove('hidden');$('#livePreview').classList.add('hidden');$('#capture').disabled=false;$('#switchCamera').disabled=false;$('#liveStatus').textContent='Kamera aktif.'}catch(e){$('#liveStatus').textContent='Kamera tidak tersedia. Izinkan akses kamera dan buka halaman melalui HTTPS.'}};
+$('#switchCamera').onclick=async()=>{facing=facing==='environment'?'user':'environment';await $('#startCamera').click()};
+$('#capture').onclick=()=>{if(!video.videoWidth)return;liveCanvas.width=video.videoWidth;liveCanvas.height=video.videoHeight;const c=liveCanvas.getContext('2d');c.drawImage(video,0,0);results.live=liveCanvas;video.classList.add('hidden');liveCanvas.classList.remove('hidden');$('#liveActions').classList.remove('hidden');$('#capture').disabled=true;$('#liveStatus').textContent=`Foto diambil • ${liveCanvas.width} × ${liveCanvas.height} px. Tekan Simpan Foto.`;stopCam()};
+$('#saveLive').onclick=()=>results.live&&downloadCanvas(results.live,'pixel-lab-live-photo');
+$('#retake').onclick=()=>{results.live=null;liveCanvas.classList.add('hidden');$('#livePreview').classList.remove('hidden');$('#liveActions').classList.add('hidden');$('#startCamera').click()};
+window.addEventListener('beforeunload',stopCam);
+</script>
+</body>
+</html>
